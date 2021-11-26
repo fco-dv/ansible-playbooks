@@ -1,0 +1,53 @@
+---
+- hosts: all
+  tasks:
+  - name: Update the apt package index
+    become: yes
+    apt:
+      name: "*"
+      state: latest
+      update_cache: yes
+      force_apt_get: yes
+  - name: Install packages for apt add repository over HTTPS
+    become: yes
+    apt:
+      name: "{{ packagesdep }}"
+      force_apt_get: yes
+      state: latest
+      update_cache: yes
+    vars:
+      packagesdep:
+      - git
+      - apt-transport-https
+      - ca-certificates
+      - wget
+      - software-properties-common
+      - gnupg2
+      - curl
+  - name: Add Apt signing key from official docker repo
+    become: yes
+    shell: |
+      curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor --yes -o /usr/share/keyrings/docker-archive-keyring.gpg
+  - name: set up stable repo
+    become: yes
+    shell: |
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  - name: Index new repo into the cache
+    become: yes
+    apt:
+      name: "*"
+      state: latest
+      update_cache: yes
+      force_apt_get: yes
+  - name: actually install docker-ce docker-ce-cli container.io
+    become: yes
+    apt:
+      name: "{{ packagesdocker }}"
+      force_apt_get: yes
+      state: latest
+      update_cache: yes
+    vars:
+      packagesdocker:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
