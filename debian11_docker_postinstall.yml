@@ -1,0 +1,14 @@
+---
+- hosts: all
+  tasks:
+    - name: add docker group
+      become: yes
+      group:
+        name: docker
+        state: present
+    - name: add docker group to "{{ lookup('env', 'USER') }}"
+      become: yes
+      user:
+        name: "{{ lookup('env', 'USER') }}"
+        groups: docker
+        append: yes
